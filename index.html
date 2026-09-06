@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>635 大肚溪聯賽｜打擊總統計</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,"Microsoft JhengHei",sans-serif;background:#f4f6f8;color:#17202a;overflow-x:auto}
+header{background:#17202a;color:#fff;padding:18px 20px;position:sticky;top:0;z-index:10}
+h1{margin:0;font-size:28px}.sub{margin-top:6px;color:#cbd5df;font-size:16px}
+.wrap{padding:16px;max-width:1900px;margin:auto}
+.tools{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+input,button{font-size:18px;padding:11px 14px;border:1px solid #bbc5cf;border-radius:7px;background:#fff}
+input{min-width:280px}button{cursor:pointer}
+button:hover{background:#eef2f5}
+
+
+.rangeBox{background:#fff;border:1px solid #d8e0e6;border-radius:10px;padding:12px 15px;margin-bottom:14px;box-shadow:0 1px 4px #0001}
+.rangeTitle{font-size:17px;margin-bottom:8px}
+.rangeRow{display:grid;grid-template-columns:48px minmax(180px,700px) 42px;align-items:center;gap:10px;margin:5px 0}
+.rangeRow input[type=range]{width:100%;accent-color:#263746}
+.rangeHint{font-size:13px;color:#687580;margin-top:5px}
+@media(max-width:700px){
+ .rangeBox{padding:10px}
+ .rangeRow{grid-template-columns:42px 1fr 34px}
+ .rangeTitle{font-size:16px}
+}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:10px;margin-bottom:14px}
+.card{background:#fff;border-radius:10px;padding:12px 14px;box-shadow:0 1px 4px #0001}
+.label{font-size:15px;color:#65717d}.value{font-size:25px;font-weight:700;margin-top:3px}
+.tablebox{background:#fff;border-radius:10px;box-shadow:0 1px 5px #0002;overflow:visible;margin-top:8px}
+/* 手機凍結窗格：
+   ① 左右滑動：固定 NO、姓名兩欄
+   ② 上下滑動：固定統計表第一列表頭
+*/
+table{
+  border-collapse:separate;
+  border-spacing:0;
+  width:100%;
+  min-width:1120px;
+  font-size:17px;
+  table-layout:fixed;
+}
+th,td{
+  border-right:1px solid #e3e7eb;
+}
+th{
+  position:sticky;
+  top:var(--table-top,0px);
+  z-index:5;
+  background:#263746;
+  color:#fff;
+  padding:12px 7px;
+  white-space:nowrap;
+  cursor:pointer;
+  height:50px;
+  line-height:22px;
+  border-bottom:3px solid #17202a;
+}
+td{
+  padding:10px 7px;
+  border-bottom:1px solid #e3e7eb;
+  text-align:center;
+  white-space:nowrap;
+  height:44px;
+  line-height:22px;
+  background:#fff;
+}
+
+/* 只有 NO、姓名兩欄水平凍結 */
+th:first-child,td:first-child{
+  position:sticky;
+  left:0;
+  width:48px;
+  min-width:48px;
+  max-width:48px;
+  z-index:8;
+}
+th:nth-child(2),td:nth-child(2){
+  position:sticky;
+  left:48px;
+  width:92px;
+  min-width:92px;
+  max-width:92px;
+  z-index:8;
+}
+
+/* 左側凍結欄的背景，避免滑動時後方資料透出 */
+td:first-child,td:nth-child(2){
+  background:#fff;
+  box-shadow:2px 0 3px rgba(0,0,0,.08);
+}
+
+/* 表頭同時屬於垂直凍結 + 水平凍結，層級最高 */
+th:first-child,th:nth-child(2){
+  z-index:12;
+  background:#263746;
+}
+
+/* 其餘欄位適度縮窄 */
+th:nth-child(n+3),td:nth-child(n+3){min-width:58px}
+th:nth-child(3),td:nth-child(3){min-width:58px}
+th:nth-child(4),td:nth-child(4){min-width:66px}
+th:nth-child(5),td:nth-child(5){min-width:66px}
+th:nth-child(6),td:nth-child(6){min-width:58px}
+th:nth-child(7),td:nth-child(7){min-width:62px}
+th:nth-child(8),td:nth-child(8){min-width:58px}
+th:nth-child(9),td:nth-child(9){min-width:58px}
+th:nth-child(10),td:nth-child(10){min-width:58px}
+th:nth-child(11),td:nth-child(11){min-width:58px}
+th:nth-child(12),td:nth-child(12){min-width:58px}
+th:nth-child(13),td:nth-child(13){min-width:58px}
+th:nth-child(14),td:nth-child(14){min-width:58px}
+th:nth-child(15),td:nth-child(15){min-width:58px}
+th:nth-child(16),td:nth-child(16){min-width:58px}
+th:nth-child(17),td:nth-child(17){min-width:68px}
+th:nth-child(18),td:nth-child(18){min-width:68px}
+
+tbody tr:nth-child(even) td{background:#f8fafb}
+tbody tr:hover td{background:#eef5ff}
+tbody tr:nth-child(even) td:first-child,
+tbody tr:nth-child(even) td:nth-child(2){background:#f8fafb}
+tbody tr:hover td:first-child,
+tbody tr:hover td:nth-child(2){background:#eef5ff}
+
+.name{text-align:left;font-weight:700}
+.sort:after{content:" ↕";font-size:12px;color:#b9c5cf}
+.asc:after{content:" ▲"}.desc:after{content:" ▼"}
+.status{margin:10px 0;color:#596773;font-size:15px}
+.err{padding:16px;background:#fff1f1;color:#a40000;border-radius:8px;white-space:pre-wrap}
+@media(max-width:700px){
+ h1{font-size:22px}.wrap{padding:8px}.cards{grid-template-columns:repeat(2,1fr)}
+ .value{font-size:21px}table{font-size:16px}
+ input{min-width:220px;width:100%}
+}
+
+
+.opponentBox{margin:10px 0 14px}
+.opponentPanel{display:none;margin-top:10px;background:#fff;border:1px solid #dce2e7;border-radius:10px;overflow:auto}
+.opponentPanel.show{display:block}
+.opponentTable{width:100%;min-width:520px;border-collapse:collapse}
+.opponentTable th,.opponentTable td{
+  position:static !important;
+  padding:9px 10px;
+  border-bottom:1px solid #e3e7eb;
+  text-align:center;
+  white-space:nowrap;
+}
+.opponentTable th{
+  position:static !important;
+  top:auto !important;
+  left:auto !important;
+  z-index:auto !important;
+  background:#263746;
+  color:#fff;
+  height:auto;
+  line-height:normal;
+  border-bottom:1px solid #e3e7eb;
+}
+.opponentTable th:first-child,.opponentTable td:first-child{width:100px;min-width:80px;text-align:left;font-weight:700}
+.opponentTable th:nth-child(2),.opponentTable td:nth-child(2){width:60px}
+.opponentTable th:nth-child(3),.opponentTable td:nth-child(3),
+.opponentTable th:nth-child(4),.opponentTable td:nth-child(4),
+.opponentTable th:nth-child(5),.opponentTable td:nth-child(5){width:60px}
+.opponentTable th:nth-child(6),.opponentTable td:nth-child(6),
+.opponentTable th:nth-child(7),.opponentTable td:nth-child(7){width:100px}
+.opponentTable th:last-child,.opponentTable td:last-child{width:70px}
+.resultWin{font-weight:700}
+.resultLoss{font-weight:700}
+.resultDraw{font-weight:700}
+.detailBtn{font-size:14px;padding:6px 9px}
+@media(max-width:700px){
+ .opponentTable{font-size:15px}
+ .opponentTable th,.opponentTable td{padding:8px 7px}
+}
+
+
+body.playerOnly .rangeBox,
+body.playerOnly #cards,
+body.playerOnly #status,
+body.playerOnly #error,
+body.playerOnly .opponentBox{
+  display:none;
+}
+body.playerOnly .wrap{
+  padding-top:10px;
+}
+body.playerOnly .tablebox{
+  margin-top:6px;
+}
+#playerOnlyBtn.active{
+  background:#263746;
+  color:#fff;
+  border-color:#263746;
+}
+</style>
+</head>
+<body>
+<header>
+<h1>635 大肚溪聯賽｜打擊總統計</h1>
+<div class="sub" id="date">資料載入中...</div>
+</header>
+
+<div class="wrap">
+<div class="tools">
+<input id="search" type="search" placeholder="搜尋姓名">
+<button id="reload" type="button">重新載入資料</button>
+<button id="playerOnlyBtn" type="button">只看球員資料</button>
+</div>
+
+<div class="rangeBox">
+  <div class="rangeTitle">統計場次範圍：<strong id="rangeLabel">第 1 場 ～ 第 1 場</strong></div>
+  <div class="rangeRow">
+    <span>起始</span>
+    <input id="rangeStart" type="range" min="1" max="1" value="1" step="1">
+    <strong id="startValue">1</strong>
+  </div>
+  <div class="rangeRow">
+    <span>結束</span>
+    <input id="rangeEnd" type="range" min="1" max="1" value="1" step="1">
+    <strong id="endValue">1</strong>
+  </div>
+  <div class="rangeHint">依 games.csv 的紀錄順序計算，第 1 場就是 CSV 最早的一場。</div>
+</div>
+
+<div id="cards" class="cards"></div>
+<div id="status" class="status"></div>
+<div id="error"></div>
+
+<div class="opponentBox">
+  <button id="opponentBtn" type="button">對手戰績</button>
+  <div id="opponentPanel" class="opponentPanel"></div>
+</div>
+
+<div class="tablebox">
+<table id="stats">
+<thead></thead>
+<tbody></tbody>
+</table>
+</div>
+</div>
+
+<script>
+"use strict";
+// 欄位順序固定：NO、姓名、出席、出席率、上壘率、打點、打擊率、上壘、打數、一壘1、二壘2、三壘3、全壘打4、保送B、三振K、雙殺D、接殺出局F、其他出局O
+
+
+const GAME_FILE = "games.csv";
+
+const COLUMNS = [
+ ["no","NO"],["name","姓名"],["games","出席"],["rate","出席率"],
+ ["obp","上壘率"],["stars","打點"],["avg","打擊率"],["onbase","上壘"],["ab","打數"],
+ ["s1","一壘1"],["s2","二壘2"],["s3","三壘3"],["hr","全壘打4"],
+ ["bb","保送B"],["k","三振K"],["d","雙殺D"],["f","接殺出局F"],["o","其他出局O"]
+];
+
+let players = [];
+let totals = [];
+let games = [];
+let playerMap = new Map();
+let sortKey = "no";
+let sortDir = 1;
+let rangeStart = 1;
+let rangeEnd = 1;
+
+function decodeCSV(bytes){
+  const hasUtf8Bom = bytes.length >= 3 &&
+    bytes[0] === 0xEF && bytes[1] === 0xBB && bytes[2] === 0xBF;
+
+  if(hasUtf8Bom){
+    return new TextDecoder("utf-8").decode(bytes);
+  }
+
+  // 台灣 Excel 匯出的 CSV 常見 Big5；若內容明顯是 UTF-8，使用 UTF-8。
+  const utf8 = new TextDecoder("utf-8", {fatal:false}).decode(bytes);
+  if(utf8.includes("�")){
+    return new TextDecoder("big5").decode(bytes);
+  }
+  return utf8;
+}
+
+async function getText(url){
+  const response = await fetch(url + "?v=" + Date.now(), {cache:"no-store"});
+  if(!response.ok){
+    throw new Error(url + " 載入失敗：" + response.status);
+  }
+  return decodeCSV(new Uint8Array(await response.arrayBuffer()));
+}
+
+function parseCSV(text){
+  text = String(text || "").replace(/^\uFEFF/, "");
+  const rows = [];
+  let row = [], field = "", quoted = false;
+
+  for(let i=0;i<text.length;i++){
+    const ch = text[i];
+    const next = text[i+1];
+
+    if(ch === '"'){
+      if(quoted && next === '"'){
+        field += '"';
+        i++;
+      }else{
+        quoted = !quoted;
+      }
+    }else if(ch === "," && !quoted){
+      row.push(field);
+      field = "";
+    }else if((ch === "\r" || ch === "\n") && !quoted){
+      if(ch === "\r" && next === "\n") i++;
+      row.push(field);
+      if(row.some(v => String(v).trim() !== "")) rows.push(row);
+      row = [];
+      field = "";
+    }else{
+      field += ch;
+    }
+  }
+
+  if(field !== "" || row.length){
+    row.push(field);
+    if(row.some(v => String(v).trim() !== "")) rows.push(row);
+  }
+  return rows;
+}
+
+function makePlayer(name, no){
+  return { no:String(no), name:String(name).trim() };
+}
+
+function blankStats(p){
+  return {
+    no:p.no, name:p.name,
+    games:0, ab:0, s1:0, s2:0, s3:0, hr:0,
+    bb:0, k:0, d:0, f:0, o:0,
+    h:0, onbase:0, stars:0
+  };
+}
+
+function countResult(stats, raw){
+  const result = String(raw || "").trim().toUpperCase();
+
+  for(const ch of result){
+    if(ch === "1"){
+      stats.ab++; stats.s1++; stats.h++; stats.onbase++;
+    }else if(ch === "2"){
+      stats.ab++; stats.s2++; stats.h++; stats.onbase++;
+    }else if(ch === "3"){
+      stats.ab++; stats.s3++; stats.h++; stats.onbase++;
+    }else if(ch === "4"){
+      stats.ab++; stats.hr++; stats.h++; stats.onbase++;
+    }else if(ch === "B"){
+      stats.bb++; stats.onbase++;
+    }else if(ch === "K"){
+      stats.ab++; stats.k++;
+    }else if(ch === "D"){
+      stats.ab++; stats.d++;
+    }else if(ch === "F"){
+      stats.ab++; stats.f++;
+    }else if(ch === "O"){
+      stats.ab++; stats.o++;
+    }else if(ch === "*"){
+      stats.stars++;
+    }
+  }
+}
+
+function buildGames(rows){
+  const result = [];
+  let current = null;
+
+  for(const row of rows){
+    const a = String(row[0] ?? "").trim();
+    const b = String(row[1] ?? "").trim();
+    const c = String(row[2] ?? "").trim();
+    const name = String(row[3] ?? "").trim();
+    const batting = String(row[4] ?? "").trim();
+
+    // 欄位標題列
+    if(a === "日期") continue;
+
+    // 新格式：日期,對手,對手得分,球員,打擊狀態
+    if(a){
+      current = {
+        date:a,
+        time:"",
+        opponent:b,
+        score:c,
+        records:[]
+      };
+      result.push(current);
+    }
+
+    // 第一筆球員資料在同一列，後續球員資料前三欄為空白
+    if(current && name && name !== "球員"){
+      current.records.push({name:name, result:batting});
+    }
+  }
+
+  return result;
+}
+
+function calculate(sourceGames = games){
+  const map = new Map();
+  for(const p of players) map.set(p.name, blankStats(p));
+
+  for(const game of sourceGames){
+    const appeared = new Set();
+
+    for(const record of game.records){
+      const stats = map.get(record.name);
+      if(!stats) continue;
+
+      appeared.add(record.name);
+      countResult(stats, record.result);
+    }
+
+    for(const name of appeared){
+      const stats = map.get(name);
+      if(stats) stats.games++;
+    }
+  }
+
+  return players.map(p => map.get(p.name));
+}
+
+function metric(s, key){
+  if(key === "rate"){
+    const n = Math.max(0, rangeEnd - rangeStart + 1);
+    return n ? s.games / n : 0;
+  }
+  if(key === "avg"){
+    return s.ab ? s.h / s.ab : 0;
+  }
+  if(key === "obp"){
+    return (s.ab + s.bb) ? s.onbase / (s.ab + s.bb) : 0;
+  }
+  return Number(s[key] ?? 0);
+}
+
+function percent(v){
+  return (Number.isFinite(v) ? v * 100 : 0).toFixed(1) + "%";
+}
+
+function average(v){
+  return Number.isFinite(v) ? v.toFixed(3).replace(/^0\./,".") : ".000";
+}
+
+function escapeHTML(value){
+  return String(value ?? "").replace(/[&<>"']/g, ch => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[ch]));
+}
+
+function normalizeOpponent(name){
+  return String(name || "").trim().toLowerCase();
+}
+
+function gameTeamScore(game){
+  return game.records.reduce((sum,r)=>{
+    const text=String(r.result || "");
+    return sum + (text.match(/\*/g) || []).length;
+  },0);
+}
+
+function getOpponentStats(){
+  const map=new Map();
+  const sourceGames = games.slice(rangeStart-1, rangeEnd);
+  for(const game of sourceGames){
+    const name=String(game.opponent || "").trim() || "未填對手";
+    const key=normalizeOpponent(name);
+    if(!map.has(key)) map.set(key,{name, games:0, win:0, draw:0, loss:0, teamScore:0, oppScore:0, details:[]});
+    const s=map.get(key);
+    const team=gameTeamScore(game);
+    const opp=Number(game.score || 0);
+    s.games++; s.teamScore+=team; s.oppScore+=opp;
+    const result=team>opp ? "勝" : team<opp ? "敗" : "和";
+    if(result==="勝") s.win++; else if(result==="和") s.draw++; else s.loss++;
+    s.details.push({date:game.date, team, opp, result});
+  }
+  return Array.from(map.values()).sort((a,b)=>b.games-a.games || a.name.localeCompare(b.name));
+}
+
+function renderOpponentPanel(){
+  const panel=document.getElementById("opponentPanel");
+  const list=getOpponentStats();
+  panel.innerHTML=`
+    <table class="opponentTable">
+      <thead><tr><th>對手</th><th>場</th><th>勝</th><th>和</th><th>敗</th><th>635得分</th><th>對手得分</th><th>明細</th></tr></thead>
+      <tbody>${list.map((s,i)=>`
+        <tr>
+          <td>${escapeHTML(s.name)}</td><td>${s.games}</td><td>${s.win}</td><td>${s.draw}</td><td>${s.loss}</td>
+          <td>${s.teamScore}</td><td>${s.oppScore}</td>
+          <td><button class="detailBtn" data-opp="${escapeHTML(normalizeOpponent(s.name))}">查看</button></td>
+        </tr>`).join("")}</tbody>
+    </table>`;
+  panel.querySelectorAll(".detailBtn").forEach(btn=>{
+    btn.onclick=()=>{
+      const key=btn.dataset.opp;
+      const s=list.find(x=>normalizeOpponent(x.name)===key);
+      if(!s) return;
+      alert(s.name+"\\n\\n"+s.details.map(d=>`${d.date}　635 ${d.team} : ${d.opp}　${d.result}`).join("\\n"));
+    };
+  });
+}
+
+function getSelectedGames(){
+  const start=Math.max(1, Math.min(rangeStart, games.length || 1));
+  const end=Math.max(start, Math.min(rangeEnd, games.length || start));
+  return games.slice(start-1,end);
+}
+
+function updateRangeUI(){
+  const n=games.length;
+  const rs=document.getElementById("rangeStart");
+  const re=document.getElementById("rangeEnd");
+  if(!rs || !re) return;
+  rs.max=String(Math.max(1,n)); re.max=String(Math.max(1,n));
+  rangeStart=Math.max(1,Math.min(rangeStart,Math.max(1,n)));
+  rangeEnd=Math.max(rangeStart,Math.min(rangeEnd,Math.max(1,n)));
+  rs.value=rangeStart; re.value=rangeEnd;
+  document.getElementById("startValue").textContent=rangeStart;
+  document.getElementById("endValue").textContent=rangeEnd;
+  document.getElementById("rangeLabel").textContent=`第 ${rangeStart} 場 ～ 第 ${rangeEnd} 場`;
+}
+
+function render(){
+  const selectedGames=getSelectedGames();
+
+  // 依目前場次範圍重新建立球員與統計
+  const seen=new Set(), names=[];
+  for(const game of selectedGames){
+    for(const record of game.records){
+      if(record.name && !seen.has(record.name)){
+        seen.add(record.name); names.push(record.name);
+      }
+    }
+  }
+  players=names.map((name,i)=>makePlayer(name,i+1));
+  playerMap=new Map(players.map(p=>[p.name,p]));
+  totals=calculate(selectedGames);
+
+  const query = document.getElementById("search").value.trim().toLowerCase();
+
+  let rows = totals.filter(s =>
+    !query || s.name.toLowerCase().includes(query)
+  );
+
+  rows.sort((a,b)=>{
+    const x = metric(a, sortKey);
+    const y = metric(b, sortKey);
+    if(x < y) return -sortDir;
+    if(x > y) return sortDir;
+    return Number(a.no || 999999) - Number(b.no || 999999);
+  });
+
+  // NO 永遠是目前排序後的 1~35
+  rows = rows.slice(0,35);
+
+  document.querySelector("#stats thead").innerHTML =
+    "<tr>" +
+    COLUMNS.map(([key,label]) =>
+      `<th data-key="${key}" class="${
+        key === sortKey ? (sortDir === 1 ? "asc" : "desc") : "sort"
+      }">${label}</th>`
+    ).join("") +
+    "</tr>";
+
+  document.querySelector("#stats tbody").innerHTML = rows.map((s,i) => `
+    <tr>
+      <td>${i+1}</td>
+      <td class="name">${escapeHTML(s.name)}</td>
+      <td>${s.games}</td>
+      <td>${percent(metric(s,"rate"))}</td>
+      <td>${percent(metric(s,"obp"))}</td>
+      <td>${s.stars}</td>
+      <td>${average(metric(s,"avg"))}</td>
+      <td>${s.onbase}</td>
+      <td>${s.ab}</td>
+      <td>${s.s1}</td>
+      <td>${s.s2}</td>
+      <td>${s.s3}</td>
+      <td>${s.hr}</td>
+      <td>${s.bb}</td>
+      <td>${s.k}</td>
+      <td>${s.d}</td>
+      <td>${s.f}</td>
+      <td>${s.o}</td>
+    </tr>
+  `).join("");
+
+  document.querySelectorAll("#stats th").forEach(th=>{
+    th.onclick=()=>{
+      const key=th.dataset.key;
+      if(sortKey===key) sortDir*=-1;
+      else {sortKey=key; sortDir=-1;}
+      render();
+    };
+  });
+
+  const sum=(key)=>totals.reduce((n,s)=>n+Number(s[key]||0),0);
+  const totalAB=sum("ab"), totalH=sum("h"), totalBB=sum("bb"), totalOB=sum("onbase");
+  const totalTeamScore=selectedGames.reduce((n,g)=>n+gameTeamScore(g),0);
+  const totalOppScore=selectedGames.reduce((n,g)=>n+Number(g.score||0),0);
+  let wins=0,draws=0,losses=0;
+  selectedGames.forEach(g=>{
+    const a=gameTeamScore(g), b=Number(g.score||0);
+    if(a>b) wins++; else if(a===b) draws++; else losses++;
+  });
+
+  document.getElementById("cards").innerHTML=[
+    ["總場次",selectedGames.length],["635總得分",totalTeamScore],["對手總得分",totalOppScore],
+    ["勝",wins],["和",draws],["敗",losses],["球員人數",totals.length],
+    ["總打數",totalAB],["總安打",totalH],["總上壘",totalOB],
+    ["總打擊率",average(totalAB?totalH/totalAB:0)],
+    ["總上壘率",percent((totalAB+totalBB)?totalOB/(totalAB+totalBB):0)]
+  ].map(x=>`<div class="card"><div class="label">${x[0]}</div><div class="value">${x[1]}</div></div>`).join("");
+}
+
+
+async function load(){
+  const errorBox = document.getElementById("error");
+  const statusBox = document.getElementById("status");
+
+  errorBox.innerHTML = "";
+  statusBox.textContent = "正在讀取 games.csv...";
+
+  try{
+    const gameText = await getText(GAME_FILE);
+    const gameRows = parseCSV(gameText);
+
+    games = buildGames(gameRows);
+
+    // 不再需要 players.csv；只統計 games.csv 實際出現過的球員。
+    const seen = new Set();
+    const names = [];
+    for(const game of games){
+      for(const record of game.records){
+        if(record.name && !seen.has(record.name)){
+          seen.add(record.name);
+          names.push(record.name);
+        }
+      }
+    }
+
+    players = names.map((name, i) => makePlayer(name, i + 1));
+
+    playerMap = new Map();
+    for(const p of players) playerMap.set(p.name, p);
+
+    totals = calculate();
+
+    rangeStart=1;
+    rangeEnd=games.length || 1;
+    updateRangeUI();
+    render();
+
+    document.getElementById("date").textContent =
+      `共 ${games.length} 場｜目前統計第 1～${games.length} 場｜球員 ${players.length} 人`;
+
+    statusBox.textContent =
+      `已載入 ${games.length} 場比賽。可用下方兩個旋鈕選擇統計場次範圍。點擊欄位標題即可排序。`;
+
+    render();
+
+  }catch(error){
+    console.error(error);
+    statusBox.textContent = "";
+    errorBox.innerHTML =
+      `<div class="err">資料載入錯誤：${escapeHTML(error.message)}
+
+請確認：
+1. index.html 與 games.csv 在同一層
+2. 檔名完全是 games.csv
+3. GitHub Pages 已完成部署
+
+如果你剛剛才更新檔案，請按「重新載入資料」或 Ctrl + F5。</div>`;
+  }
+}
+
+function updateTableStickyTop(){
+  const header=document.querySelector("header");
+  if(header){
+    document.documentElement.style.setProperty(
+      "--table-top",
+      Math.ceil(header.getBoundingClientRect().height) + "px"
+    );
+  }
+}
+window.addEventListener("resize", updateTableStickyTop);
+window.addEventListener("load", updateTableStickyTop);
+
+document.getElementById("search").addEventListener("input", render);
+function changeRange(which, value){
+  const v=Number(value);
+  if(which==="start"){
+    rangeStart=Math.max(1,Math.min(v,rangeEnd));
+  }else{
+    rangeEnd=Math.min(games.length,Math.max(v,rangeStart));
+  }
+  updateRangeUI();
+  render();
+  document.getElementById("date").textContent =
+    `共 ${games.length} 場｜目前統計第 ${rangeStart}～${rangeEnd} 場｜球員 ${totals.length} 人`;
+}
+
+document.getElementById("rangeStart").addEventListener("input",e=>changeRange("start",e.target.value));
+document.getElementById("rangeEnd").addEventListener("input",e=>changeRange("end",e.target.value));
+
+document.getElementById("playerOnlyBtn").addEventListener("click", ()=>{
+  const only=document.body.classList.toggle("playerOnly");
+  const btn=document.getElementById("playerOnlyBtn");
+  btn.textContent=only ? "顯示完整統計" : "只看球員資料";
+  btn.classList.toggle("active", only);
+  updateTableStickyTop();
+});
+
+document.getElementById("reload").addEventListener("click", load);
+document.getElementById("opponentBtn").addEventListener("click", ()=>{
+  const p=document.getElementById("opponentPanel");
+  p.classList.toggle("show");
+  if(p.classList.contains("show")) renderOpponentPanel();
+});
+load();
+</script>
+</body>
+</html>
