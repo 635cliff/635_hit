@@ -214,6 +214,13 @@ body.playerOnly .tablebox{
 #lightboxClose{position:absolute;top:12px;right:16px;font-size:24px;background:#fff;color:#111}
 @media(max-width:600px){#imagesModal{padding:8px}.imagesDialog{margin:1vh auto;padding:10px}#imagesGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.imageCard img{height:135px}.imageCard .imageName{font-size:11px}}
 
+
+#lightboxPrev,#lightboxNext{position:absolute;top:50%;transform:translateY(-50%);z-index:2;border:1px solid #fff9;background:rgba(25,30,36,.78);color:#fff;padding:12px 14px;border-radius:8px;font-size:16px;cursor:pointer}
+#lightboxPrev{left:14px}
+#lightboxNext{right:14px}
+#lightboxCounter{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);color:#fff;background:rgba(0,0,0,.55);padding:5px 12px;border-radius:20px;font-size:14px}
+@media(max-width:600px){#lightboxPrev,#lightboxNext{top:auto;bottom:18px;transform:none;padding:10px 11px;font-size:14px}#lightboxPrev{left:10px}#lightboxNext{right:10px}#lightboxCounter{bottom:66px}}
+
 </style>
 </head>
 <body>
@@ -274,8 +281,11 @@ body.playerOnly .tablebox{
   </section>
 </div>
 <div id="imageLightbox" aria-hidden="true">
-  <button id="lightboxClose" type="button">關閉 ✕</button>
+  <button id="lightboxClose" type="button" aria-label="關閉">關閉 ✕</button>
+  <button id="lightboxPrev" type="button" aria-label="上一張圖片" title="上一張">‹ 上一張</button>
   <img id="lightboxImg" alt="原始比賽紀錄圖片">
+  <button id="lightboxNext" type="button" aria-label="下一張圖片" title="下一張">下一張 ›</button>
+  <div id="lightboxCounter" aria-live="polite"></div>
 </div>
 
 <script>
@@ -760,7 +770,20 @@ const imagesGrid = document.getElementById("imagesGrid");
 const imagesStatus = document.getElementById("imagesStatus");
 const imageLightbox = document.getElementById("imageLightbox");
 const lightboxImg = document.getElementById("lightboxImg");
+const lightboxPrev = document.getElementById("lightboxPrev");
+const lightboxNext = document.getElementById("lightboxNext");
+const lightboxCounter = document.getElementById("lightboxCounter");
+let originalImageFiles = [];
+let currentImageIndex = -1;
 
+function showLightboxImage(index){
+  if(!originalImageFiles.length) return;
+  currentImageIndex = (index + originalImageFiles.length) % originalImageFiles.length;
+  const file = originalImageFiles[currentImageIndex];
+  lightboxImg.src = file.download_url;
+  lightboxImg.alt = file.name;
+  lightboxCounter.textContent = `${currentImageIndex + 1} / ${originalImageFiles.length}　${file.name}`;
+}
 function closeImagesModal(){
   imagesModal.classList.remove("show");
   imagesModal.setAttribute("aria-hidden","true");
@@ -775,6 +798,7 @@ async function showOriginalImages(){
   imagesModal.setAttribute("aria-hidden","false");
   imagesStatus.textContent="正在讀取 GitHub images 資料夾……";
   imagesGrid.innerHTML="";
+  originalImageFiles = [];
   try{
     const response=await fetch(IMAGES_API,{headers:{"Accept":"application/vnd.github+json"}});
     if(!response.ok) throw new Error("GitHub 圖片清單讀取失敗（HTTP "+response.status+"）");
@@ -786,8 +810,10 @@ async function showOriginalImages(){
       imagesStatus.textContent="images 資料夾目前沒有可顯示的圖片。";
       return;
     }
+    originalImageFiles = images;
     imagesStatus.textContent=`共 ${images.length} 張原始圖片。點圖片可放大查看。`;
-    for(const file of images){
+    for(let imageIndex=0; imageIndex<images.length; imageIndex++){
+      const file = images[imageIndex];
       const card=document.createElement("div");
       card.className="imageCard";
       const link=document.createElement("a");
@@ -801,8 +827,7 @@ async function showOriginalImages(){
       img.loading="lazy";
       img.addEventListener("click",event=>{
         event.preventDefault();
-        lightboxImg.src=file.download_url;
-        lightboxImg.alt=file.name;
+        showLightboxImage(imageIndex);
         imageLightbox.classList.add("show");
         imageLightbox.setAttribute("aria-hidden","false");
       });
@@ -829,8 +854,14 @@ document.getElementById("originalImagesBtn").addEventListener("click",showOrigin
 document.getElementById("imagesClose").addEventListener("click",closeImagesModal);
 imagesModal.addEventListener("click",event=>{if(event.target===imagesModal)closeImagesModal();});
 document.getElementById("lightboxClose").addEventListener("click",closeLightbox);
+lightboxPrev.addEventListener("click",()=>showLightboxImage(currentImageIndex-1));
+lightboxNext.addEventListener("click",()=>showLightboxImage(currentImageIndex+1));
 imageLightbox.addEventListener("click",event=>{if(event.target===imageLightbox)closeLightbox();});
-document.addEventListener("keydown",event=>{if(event.key==="Escape"){closeLightbox();closeImagesModal();}});
+document.addEventListener("keydown",event=>{
+  if(event.key==="Escape"){closeLightbox();closeImagesModal();}
+  if(imageLightbox.classList.contains("show") && event.key==="ArrowLeft") showLightboxImage(currentImageIndex-1);
+  if(imageLightbox.classList.contains("show") && event.key==="ArrowRight") showLightboxImage(currentImageIndex+1);
+});
 
 document.getElementById("reload").addEventListener("click", load);
 document.getElementById("opponentBtn").addEventListener("click", ()=>{
