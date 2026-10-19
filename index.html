@@ -194,6 +194,26 @@ body.playerOnly .tablebox{
   color:#fff;
   border-color:#263746;
 }
+
+#originalImagesBtn{background:#1769aa;color:#fff;border-color:#1769aa}
+#imagesModal{display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.72);padding:18px;overflow:auto}
+#imagesModal.show{display:block}
+.imagesDialog{max-width:1100px;margin:3vh auto;background:var(--panel,#fff);color:var(--text,#222);border-radius:12px;padding:16px;box-shadow:0 10px 40px #0005}
+.imagesHead{display:flex;align-items:center;justify-content:space-between;gap:12px;position:sticky;top:0;background:inherit;padding-bottom:12px;z-index:2}
+.imagesHead h2{margin:0;font-size:20px}
+#imagesClose{font-size:20px;padding:5px 12px}
+#imagesStatus{margin:8px 0 14px;color:var(--muted,#666)}
+#imagesGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px}
+.imageCard{border:1px solid #ccd2d8;border-radius:8px;overflow:hidden;background:#f7f8fa;color:#20252b}
+.imageCard a{color:inherit;text-decoration:none}
+.imageCard img{display:block;width:100%;height:190px;object-fit:contain;background:#e9edf1}
+.imageCard .imageName{padding:8px;font-size:13px;overflow-wrap:anywhere}
+#imageLightbox{display:none;position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,.92);align-items:center;justify-content:center;padding:18px}
+#imageLightbox.show{display:flex}
+#imageLightbox img{max-width:96vw;max-height:88vh;object-fit:contain}
+#lightboxClose{position:absolute;top:12px;right:16px;font-size:24px;background:#fff;color:#111}
+@media(max-width:600px){#imagesModal{padding:8px}.imagesDialog{margin:1vh auto;padding:10px}#imagesGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.imageCard img{height:135px}.imageCard .imageName{font-size:11px}}
+
 </style>
 </head>
 <body>
@@ -207,6 +227,7 @@ body.playerOnly .tablebox{
 <input id="search" type="search" placeholder="搜尋姓名">
 <button id="reload" type="button">重新載入資料</button>
 <button id="playerOnlyBtn" type="button">只看球員資料</button>
+<button id="originalImagesBtn" type="button">原始圖片</button>
 </div>
 
 <div class="rangeBox">
@@ -239,6 +260,22 @@ body.playerOnly .tablebox{
 <tbody></tbody>
 </table>
 </div>
+</div>
+
+
+<div id="imagesModal" aria-hidden="true">
+  <section class="imagesDialog" role="dialog" aria-modal="true" aria-labelledby="imagesTitle">
+    <div class="imagesHead">
+      <h2 id="imagesTitle">原始比賽紀錄圖片</h2>
+      <button id="imagesClose" type="button" aria-label="關閉">關閉 ✕</button>
+    </div>
+    <div id="imagesStatus">正在讀取 GitHub images 資料夾……</div>
+    <div id="imagesGrid"></div>
+  </section>
+</div>
+<div id="imageLightbox" aria-hidden="true">
+  <button id="lightboxClose" type="button">關閉 ✕</button>
+  <img id="lightboxImg" alt="原始比賽紀錄圖片">
 </div>
 
 <script>
@@ -573,11 +610,11 @@ function render(){
       <td class="name">${escapeHTML(s.name)}</td>
       <td>${s.games}</td>
       <td>${percent(metric(s,"rate"))}</td>
-      <td>${s.ab}</td>
       <td>${percent(metric(s,"obp"))}</td>
       <td>${s.stars}</td>
       <td>${average(metric(s,"avg"))}</td>
       <td>${s.onbase}</td>
+      <td>${s.ab}</td>
       <td>${s.s1}</td>
       <td>${s.s2}</td>
       <td>${s.s3}</td>
@@ -715,6 +752,85 @@ document.getElementById("playerOnlyBtn").addEventListener("click", ()=>{
   btn.classList.toggle("active", only);
   updateTableStickyTop();
 });
+
+
+const IMAGES_API = "https://api.github.com/repos/635cliff/635_hit/contents/images?ref=main";
+const imagesModal = document.getElementById("imagesModal");
+const imagesGrid = document.getElementById("imagesGrid");
+const imagesStatus = document.getElementById("imagesStatus");
+const imageLightbox = document.getElementById("imageLightbox");
+const lightboxImg = document.getElementById("lightboxImg");
+
+function closeImagesModal(){
+  imagesModal.classList.remove("show");
+  imagesModal.setAttribute("aria-hidden","true");
+}
+function closeLightbox(){
+  imageLightbox.classList.remove("show");
+  imageLightbox.setAttribute("aria-hidden","true");
+  lightboxImg.src="";
+}
+async function showOriginalImages(){
+  imagesModal.classList.add("show");
+  imagesModal.setAttribute("aria-hidden","false");
+  imagesStatus.textContent="正在讀取 GitHub images 資料夾……";
+  imagesGrid.innerHTML="";
+  try{
+    const response=await fetch(IMAGES_API,{headers:{"Accept":"application/vnd.github+json"}});
+    if(!response.ok) throw new Error("GitHub 圖片清單讀取失敗（HTTP "+response.status+"）");
+    const files=await response.json();
+    const images=files
+      .filter(f=>f.type==="file" && /\.(jpe?g|png|gif|webp|bmp)$/i.test(f.name))
+      .sort((a,b)=>a.name.localeCompare(b.name,undefined,{numeric:true,sensitivity:"base"}));
+    if(!images.length){
+      imagesStatus.textContent="images 資料夾目前沒有可顯示的圖片。";
+      return;
+    }
+    imagesStatus.textContent=`共 ${images.length} 張原始圖片。點圖片可放大查看。`;
+    for(const file of images){
+      const card=document.createElement("div");
+      card.className="imageCard";
+      const link=document.createElement("a");
+      link.href=file.download_url;
+      link.target="_blank";
+      link.rel="noopener";
+      link.title="另開原始圖片";
+      const img=document.createElement("img");
+      img.src=file.download_url;
+      img.alt=file.name;
+      img.loading="lazy";
+      img.addEventListener("click",event=>{
+        event.preventDefault();
+        lightboxImg.src=file.download_url;
+        lightboxImg.alt=file.name;
+        imageLightbox.classList.add("show");
+        imageLightbox.setAttribute("aria-hidden","false");
+      });
+      const name=document.createElement("div");
+      name.className="imageName";
+      name.textContent=file.name;
+      link.appendChild(img);
+      link.appendChild(name);
+      card.appendChild(link);
+      imagesGrid.appendChild(card);
+    }
+  }catch(err){
+    imagesStatus.textContent="無法讀取圖片清單。請確認 Repository 是公開的，或稍後再試。";
+    const link=document.createElement("a");
+    link.href="https://github.com/635cliff/635_hit/tree/main/images";
+    link.target="_blank";
+    link.rel="noopener";
+    link.textContent="直接前往 GitHub images 資料夾";
+    imagesStatus.appendChild(document.createTextNode(" "));
+    imagesStatus.appendChild(link);
+  }
+}
+document.getElementById("originalImagesBtn").addEventListener("click",showOriginalImages);
+document.getElementById("imagesClose").addEventListener("click",closeImagesModal);
+imagesModal.addEventListener("click",event=>{if(event.target===imagesModal)closeImagesModal();});
+document.getElementById("lightboxClose").addEventListener("click",closeLightbox);
+imageLightbox.addEventListener("click",event=>{if(event.target===imageLightbox)closeLightbox();});
+document.addEventListener("keydown",event=>{if(event.key==="Escape"){closeLightbox();closeImagesModal();}});
 
 document.getElementById("reload").addEventListener("click", load);
 document.getElementById("opponentBtn").addEventListener("click", ()=>{
